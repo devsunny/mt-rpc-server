@@ -29,6 +29,7 @@ public class RPCJavaEnvelope extends AbstractRPCEnvelope {
 		}
 		envelope.setClassName(rcmd.shift());
 		for (String cmd : rcmd.getCmdArray()) {
+			
 			envelope.addRpcObjects(cmd);
 		}
 		return envelope;

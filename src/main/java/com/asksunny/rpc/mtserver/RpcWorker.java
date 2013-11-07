@@ -1,5 +1,6 @@
 package com.asksunny.rpc.mtserver;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -47,6 +48,9 @@ public class RpcWorker implements Runnable {
 					log.error(String.format("Failed to execute client %s request %s", this.client.getInetAddress(), envelope.toString()), ex);	
 				}
 			}			
+		}catch(EOFException eox){
+			//client disconnected; let it be
+			;
 		}catch(IOException ex){
 			log.error(String.format("Failed to handle client %s request", this.client.getInetAddress()), ex);			
 		}finally{

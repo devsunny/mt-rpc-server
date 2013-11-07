@@ -12,7 +12,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.asksunny.io.utils.StreamCopier;
 
 import static com.asksunny.protocol.rpc.RPCEnvelope.*;
 
@@ -94,7 +93,7 @@ public class StreamProtocolEncoder implements ProtocolEncoder {
 			byteSent +=jarContent.length;
 		}			
 		byteSent += encodeString(objOut, javEnv.getClassName());		
-		List<RPCObject> rpcObjs = javEnv.getRpcObjects();
+		List<RPCObject> rpcObjs = javEnv.getRpcObjects();		
 		byteSent += encodeRpcObjects(objOut, rpcObjs);			
 		objOut.flush();
 		if(log.isDebugEnabled()) log.debug("end of encodeJavaEnvelope");
