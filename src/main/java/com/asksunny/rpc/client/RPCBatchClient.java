@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.asksunny.cli.utils.CLICommand;
-import com.asksunny.cli.utils.CLICommandLineParser;
 import com.asksunny.cli.utils.CLIOptionAnnotationBasedBinder;
 import com.asksunny.cli.utils.annotation.CLIOptionBinding;
 import com.asksunny.protocol.rpc.CLIRPCObjectFormatter;
@@ -310,7 +309,7 @@ public class RPCBatchClient {
 
 		try {
 			client.connect();
-
+			client.execute(rargs);
 		} finally {
 			client.shutdown();
 		}
