@@ -83,9 +83,8 @@ public class StreamProtocolEncoder implements ProtocolEncoder {
 	
 	protected long encodeAdminEnvelope(OutputStream objOut,
 			RPCAdminEnvelope adminEnv) throws IOException {
-		long byteSent = 0L;		
-		
-		
+		if(log.isDebugEnabled()) log.debug("encodeAdminEnvelope");
+		long byteSent = 0L;	
 		writeShort(objOut, adminEnv.getEnvelopeType());	
 		byteSent +=2L;
 		writeInt(objOut, adminEnv.getAdminCommand());
@@ -93,6 +92,7 @@ public class StreamProtocolEncoder implements ProtocolEncoder {
 		List<RPCObject> rpcObjs = adminEnv.getRpcObjects();
 		byteSent += encodeRpcObjects(objOut, rpcObjs);			
 		objOut.flush();
+		if(log.isDebugEnabled()) log.debug("encodeAdminEnvelope: bytes sent [{}]", byteSent);
 		return byteSent;
 	}
 	

@@ -16,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.asksunny.protocol.rpc.ProtocolDecodeHandler;
+import com.asksunny.protocol.rpc.RPCAdminCommand;
+import com.asksunny.protocol.rpc.RPCAdminEnvelope;
 import com.asksunny.protocol.rpc.RPCEnvelope;
 import com.asksunny.protocol.rpc.StreamProtocolDecoder;
 import com.asksunny.protocol.rpc.StreamProtocolEncoder;
@@ -60,6 +62,13 @@ public class RPCAsyncClient implements Runnable {
 			if (req != null) {
 				try {
 					encoder.encode(sout, req);
+					if(req.getEnvelopeType()==RPCEnvelope.RPC_ENVELOPE_TYPE_ADMIN){
+						RPCAdminEnvelope admin = (RPCAdminEnvelope)req;
+						if(admin.getAdminCommand()==RPCAdminCommand.SHUTDOWN.getValue()){
+							RPCAdminEnvelope preq = (new RPCAdminEnvelope()).setAdminCommand(RPCAdminCommand.PING);
+							sendRequest(preq);
+						}
+					}
 					RPCEnvelope env = decoder.decodeNow(sin);
 					for (ProtocolDecodeHandler handler : registeredHandlers) {
 						handler.onReceive(env);

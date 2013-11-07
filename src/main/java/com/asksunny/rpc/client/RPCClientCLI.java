@@ -21,6 +21,7 @@ import com.asksunny.cli.utils.CLIOptionAnnotationBasedBinder;
 import com.asksunny.cli.utils.annotation.CLIOptionBinding;
 import com.asksunny.protocol.rpc.CLIRPCObjectFormatter;
 import com.asksunny.protocol.rpc.ProtocolDecodeHandler;
+import com.asksunny.protocol.rpc.RPCAdminEnvelope;
 import com.asksunny.protocol.rpc.RPCEnvelope;
 import com.asksunny.protocol.rpc.RPCJavaEnvelope;
 import com.asksunny.protocol.rpc.RPCObject;
@@ -272,14 +273,17 @@ public class RPCClientCLI implements ProtocolDecodeHandler {
 				}
 			} else if (cmd.equalsIgnoreCase(ADMIN)) {
 				remoteCommand.shift();
-				String action = remoteCommand.shift();
+				String action = remoteCommand.peek();
 				if(action.equalsIgnoreCase(HELP1)|| action.equalsIgnoreCase(HELP2))
 				{
-					printHelp(RPCEnvelope.RPC_ENVELOPE_TYPE_ADMIN);	
-					continue;
+					printHelp(RPCEnvelope.RPC_ENVELOPE_TYPE_ADMIN);						
+				}else{					
+					try{
+						envelope =  RPCAdminEnvelope.createAdminEnvelope(remoteCommand);
+					}catch(Exception ex){
+						System.err.println("Invalid command:" + action);						
+					}
 				}
-				
-				
 			} else if (cmd.equalsIgnoreCase(SHELL)) {
 				remoteCommand.shift();
 				String ncmd = remoteCommand.peek();
@@ -304,19 +308,29 @@ public class RPCClientCLI implements ProtocolDecodeHandler {
 	protected static void printHelp(int envelopeType) {
 
 		switch (envelopeType) {
-		case RPCEnvelope.RPC_ENVELOPE_TYPE_ADMIN:			
+		case RPCEnvelope.RPC_ENVELOPE_TYPE_ADMIN:
+			System.err
+			.println("Available command: admin ping|echo|heartbeat|status|shutdown");
 			break;
 		case RPCEnvelope.RPC_ENVELOPE_TYPE_STREAM:
+			System.err
+			.println("Available command: stream toRemote|fromRemote");
 			break;
 		case RPCEnvelope.RPC_ENVELOPE_TYPE_SHELL:
+			System.err
+			.println("Available command: shell shell_command|shell_script");
 			break;
 		case RPCEnvelope.RPC_ENVELOPE_TYPE_JAVA:
+			System.err
+			.println("Available command: [java path_jar_file] class_name parameter_list_form_class");
 			break;
 		default:
-			System.out.println("Available command: java, shell, stream, admin. Type [command] help for detail of each command.");
+			System.err
+					.println("Available command: java, shell, stream, admin. Type [command] help for detail of each command.");
 			break;
 
 		}
+
 
 	}
 
@@ -324,7 +338,7 @@ public class RPCClientCLI implements ProtocolDecodeHandler {
 
 	public void onReceive(RPCEnvelope envelope) {
 
-		if(envelope.getRpcObjects()!=null){
+		if(envelope!=null && envelope.getRpcObjects()!=null){
 			for (RPCObject rpcObject : envelope.getRpcObjects()) {
 				System.out.println(formatter.format(rpcObject));
 			}
@@ -366,7 +380,7 @@ public class RPCClientCLI implements ProtocolDecodeHandler {
 
 	@Override
 	public void onSocketIOError(IOException iex) {
-		System.err.println("Server shutdown expectly.");		
+		System.err.println("Server shutdown completely.");		
 		saveCommandHistory();
 		System.exit(1);		
 	}

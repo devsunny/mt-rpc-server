@@ -156,7 +156,7 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 			}
 		}
 		envelope.setRpcObjects(objs);
-		envelope.setReceivedInBytes(bytesReceived);
+		envelope.setReceivedInBytes(bytesReceived+2);
 		return envelope;
 	}
 	
@@ -338,18 +338,18 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 			}	
 			break;
 		}		
-		obj.setValue(value).setReceivedInBytes(bytesReceived);
+		obj.setValue(value).setReceivedInBytes(bytesReceived+2);
 		return obj;
 	}
 	
 	protected  RPCAdminEnvelope decodeAdminEnvelope(InputStream objIn)  throws IOException
 	{
+		if(log.isDebugEnabled()) log.debug("decodeAdminEnvelope");
 		long bytesReceived = 0L;
 		RPCAdminEnvelope envelope = new RPCAdminEnvelope();
 		int val = readInt(objIn);
 		bytesReceived += 4;
-		envelope.setAdminCommand(RPCAdminCommand.valueOf(val));
-		
+		envelope.setAdminCommand(RPCAdminCommand.valueOf(val));		
 		
 		List<RPCObject> objs =  decodeRPCObjects(objIn);
 		if(objs!=null){
@@ -358,7 +358,8 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 			}
 		}
 		envelope.setRpcObjects(objs);
-		envelope.setReceivedInBytes(bytesReceived);		
+		envelope.setReceivedInBytes(bytesReceived+2);	
+		if(log.isDebugEnabled()) log.debug("decodeAdminEnvelope byte received [{}]", envelope.getReceivedInBytes());
 		return envelope;
 	}
 	
@@ -388,7 +389,7 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 			}
 		}
 		envelope.setRpcObjects(objs);
-		envelope.setReceivedInBytes(bytesReceived);		
+		envelope.setReceivedInBytes(bytesReceived+2);		
 		return envelope;
 	}
 	
@@ -435,11 +436,11 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 				bytesReceived += length;
 				objIn.skip(length);
 			}
-			envelope.setLength(length).setReceivedInBytes(bytesReceived);
+			envelope.setLength(length).setReceivedInBytes(bytesReceived+2);
 			
 		}else{
 			
-			envelope.setLength(-1).setReceivedInBytes(bytesReceived);
+			envelope.setLength(-1).setReceivedInBytes(bytesReceived+2);
 		}
 		if(log.isDebugEnabled()) log.debug("Stream decode complete, total bytes received [{}]", bytesReceived);
 		return envelope;
@@ -454,7 +455,7 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 		byte[] buf = new byte[length];
 		readFully(objIn, buf);
 		bytesReceived += length;
-		envelope.setMessage(buf).setReceivedInBytes(bytesReceived);
+		envelope.setMessage(buf).setReceivedInBytes(bytesReceived+2);
 		return envelope;
 	}
 	
