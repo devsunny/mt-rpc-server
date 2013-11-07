@@ -14,6 +14,8 @@ import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -36,7 +38,7 @@ public class StreamProtocolDecoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);		
 		StreamProtocolDecoder decoder = new StreamProtocolDecoder();
 		RPCShellEnvelope decoded = (RPCShellEnvelope)  decoder.decodeNow(in);
@@ -58,7 +60,7 @@ public class StreamProtocolDecoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
 		StreamProtocolDecoder decoder = new StreamProtocolDecoder();
@@ -81,7 +83,7 @@ public class StreamProtocolDecoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);		
 		
 		
@@ -113,7 +115,7 @@ public class StreamProtocolDecoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);		
 		
 		StreamProtocolDecoder decoder = new StreamProtocolDecoder();
@@ -138,7 +140,7 @@ public class StreamProtocolDecoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);		
 		
 		StreamProtocolDecoder decoder = new StreamProtocolDecoder();
@@ -162,7 +164,7 @@ public class StreamProtocolDecoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
 		
@@ -186,7 +188,7 @@ public class StreamProtocolDecoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
 		StreamProtocolDecoder decoder = new StreamProtocolDecoder();
@@ -209,7 +211,7 @@ public class StreamProtocolDecoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
 		StreamProtocolDecoder decoder = new StreamProtocolDecoder();
@@ -232,7 +234,7 @@ public class StreamProtocolDecoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
 		StreamProtocolDecoder decoder = new StreamProtocolDecoder();
@@ -253,7 +255,7 @@ public class StreamProtocolDecoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
 		StreamProtocolDecoder decoder = new StreamProtocolDecoder();
@@ -266,13 +268,21 @@ public class StreamProtocolDecoderTest {
 	@Test
 	public void testDecodeStream() throws IOException{
 		StreamProtocolEncoder encoder = new StreamProtocolEncoder();
-		RPCEnvelope request = (new RPCStreamEnvelope()).setLength(5).setStream(new ByteArrayInputStream("HELLO WORLD".getBytes()));		
+		RPCStreamEnvelope request = new RPCStreamEnvelope()	;
+		request.setRpcType(RPCEnvelope.RPC_TYPE_RESPONSE);
+		request.setSource("C:/Users/Sunny Liu/git/mt-rpc-server/src/test/resources/test2.jar");
+		request.setDestination("C:/java/test/test3.jar");
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		File f = new File("C:/Users/Sunny Liu/git/mt-rpc-server/src/test/resources/test2.jar");
+		request.setLength(f.length());
+		FileInputStream fin = new FileInputStream(f);
+		request.setStream(fin);
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
+		fin.close();
 		
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
 		
@@ -281,7 +291,7 @@ public class StreamProtocolDecoderTest {
 		assertNotNull(decoded);	
 		ByteArrayOutputStream bo = new ByteArrayOutputStream();
 		StreamCopier.copy( decoded.getStream(), bo) ;
-		assertEquals("HELLO", new String(bo.toByteArray()));	
+		assertEquals(f.length(), bo.toByteArray().length);	
 	}
 	
 	@Test
@@ -302,7 +312,7 @@ public class StreamProtocolDecoderTest {
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
 		
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
 		StreamProtocolDecoder decoder = new StreamProtocolDecoder();
@@ -328,7 +338,7 @@ public class StreamProtocolDecoderTest {
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
 		
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);		
 		StreamProtocolDecoder decoder = new StreamProtocolDecoder();
 		RPCJavaEnvelope decoded = (RPCJavaEnvelope)  decoder.decodeNow(in);		
@@ -357,7 +367,7 @@ public class StreamProtocolDecoderTest {
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
 		
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
 		StreamProtocolDecoder decoder = new StreamProtocolDecoder();

@@ -2,9 +2,10 @@ package com.asksunny.protocol.rpc;
 
 import static com.asksunny.protocol.rpc.RPCEnvelope.*;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,7 +15,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.asksunny.io.FixedLengthInputStream;
+import com.asksunny.io.utils.StreamCopier;
 
 public class StreamProtocolDecoder implements ProtocolDecoder {
 
@@ -29,25 +30,53 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 	{
 		return decodeNow(in, registeredHandlers);
 	}
+	
+	
+	protected short readShort(InputStream objIn)  throws IOException
+	{
+		ByteBuffer buf = ByteBuffer.allocate(2);
+		objIn.read(buf.array());
+		return buf.getShort();
+	}
+	protected int readInt(InputStream objIn)  throws IOException
+	{
+		ByteBuffer buf = ByteBuffer.allocate(4);
+		objIn.read(buf.array());
+		return buf.getInt();
+	}
+	
+	protected long readLong(InputStream objIn)  throws IOException
+	{
+		ByteBuffer buf = ByteBuffer.allocate(8);
+		objIn.read(buf.array());
+		return buf.getLong();
+	}
+	
+	protected double readDouble(InputStream objIn)  throws IOException
+	{
+		ByteBuffer buf = ByteBuffer.allocate(8);
+		objIn.read(buf.array());
+		return buf.getDouble();
+	}
+	
+	protected void readFully(InputStream objIn, byte[] b)  throws IOException
+	{
+		for(int i=0; i<b.length; i++){
+			b[i] = (byte)objIn.read();
+		}
+	}
 
 	
-	public RPCEnvelope decodeNow(InputStream in) throws IOException {
+	public RPCEnvelope decodeNow(InputStream objIn) throws IOException {
 		
-		long bytesReceived = 0L;
-		ObjectInputStream objIn = null;
-		if (in instanceof ObjectInputStream) {
-			objIn = (ObjectInputStream) in;
-		} else {
-			objIn = new ObjectInputStream(in);
-		}		
-		
+		long bytesReceived = 0L;		
 		short  envelopeType = -1;
 		try{
-			envelopeType = objIn.readShort();
+			envelopeType = readShort(objIn);
 			bytesReceived =+ 2L;
 		}catch(IOException ex){			
 			try {
-				in.close();
+				objIn.close();
 			} catch (Exception e) {
 				;
 			}
@@ -75,13 +104,13 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 		case RPC_END_SESSION:
 			envelope  = null;
 			try {
-				in.close();
+				objIn.close();
 			} catch (Exception e) {
 				;
 			}
 			break;
 		default:
-			throw new IOException("Unexpected RPC envelope type.");
+			throw new IOException(String.format("Unexpected RPC envelope type. [%d]", envelopeType));
 		}
 		
 		if(envelope!=null) ((AbstractRPCEnvelope)envelope).addReceivedInBytes(bytesReceived);
@@ -110,13 +139,13 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 	}
 	
 	
-	protected  RPCShellEnvelope decodeShellEnvelope(ObjectInputStream objIn) throws IOException
+	protected  RPCShellEnvelope decodeShellEnvelope(InputStream objIn) throws IOException
 	{
 		long bytesReceived = 0L;
 		RPCShellEnvelope envelope = new RPCShellEnvelope();
-		long envelopeId = objIn.readLong();	
+		long envelopeId = readLong(objIn);	
 		bytesReceived += 8L;
-		short rpcType = objIn.readShort();	
+		short rpcType =readShort( objIn);	
 		bytesReceived += 2L;
 		envelope.setEnvelopeId(envelopeId);
 		envelope.setRpcType(rpcType);
@@ -133,10 +162,10 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 	
 	
 	
-	protected  List<RPCObject> decodeRPCObjects(ObjectInputStream objIn) throws IOException
+	protected  List<RPCObject> decodeRPCObjects(InputStream objIn) throws IOException
 	{
 		
-		int args_len = objIn.readInt();
+		int args_len = readInt(objIn);
 		if(args_len==-1) return null;
 		List<RPCObject> list = new ArrayList<RPCObject>();
 		for (int i = 0; i < args_len; i++) {
@@ -145,10 +174,10 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 		return list;
 	}
 	
-	protected  RPCObject decodeRPCObject(ObjectInputStream objIn) throws IOException
+	protected  RPCObject decodeRPCObject(InputStream objIn) throws IOException
 	{
 		long bytesReceived = 0L;
-		short objType = objIn.readShort();
+		short objType =readShort( objIn);
 		RPCObject obj =  RPCObject.newInstance(objType);
 		
 		bytesReceived += 2L;
@@ -158,61 +187,61 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 		switch(objType)
 		{
 		case RPC_OBJECT_TYPE_BOOLEAN:
-			int bi = objIn.readByte();
+			int bi = objIn.read();
 			bytesReceived += 1L;
 			value = bi<=0? Boolean.FALSE:Boolean.TRUE;	
 			break;
 		case RPC_OBJECT_TYPE_INT:
-			value = new Integer(objIn.readInt());	
+			value = new Integer(readInt(objIn));	
 			bytesReceived += 4L;
 			break;
 		case RPC_OBJECT_TYPE_LONG:
-			value = new Long(objIn.readLong());
+			value = new Long(readLong(objIn));
 			bytesReceived += 8L;
 			break;
 		case RPC_OBJECT_TYPE_DOUBLE:
-			value = new Double(objIn.readDouble());
+			value = new Double(readDouble(objIn));
 			bytesReceived += 8L;
 			break;
 		case RPC_OBJECT_TYPE_STRING:
-			int str_len = objIn.readInt();
+			int str_len = readInt(objIn);
 			bytesReceived += 4L;
 			if(str_len==-1){
 				value = null;
 			}else{
 				byte[] str_buf = new byte[str_len];
-				objIn.readFully(str_buf);
+				readFully(objIn, str_buf);
 				bytesReceived += str_len;
 				value = new String(str_buf);
 			}
 			break;
 		case RPC_OBJECT_TYPE_BINARY:
-			int fn_len = objIn.readInt();
+			int fn_len = readInt(objIn);
 			bytesReceived += 4L;
 			byte[] fn_buf = new byte[fn_len];
-			objIn.readFully(fn_buf);
+			readFully(objIn, fn_buf);
 			bytesReceived += fn_len;
 			((RPCBinaryObject)obj).setName(new String(fn_buf));
-			long bin_len = objIn.readLong();
+			long bin_len = readLong(objIn);
 			bytesReceived += 8L;
 			if(bin_len==-1){
 				value = null;
 			}else{
 				byte[] bin_buf = new byte[(int)bin_len];
-				objIn.readFully(bin_buf);
+				readFully(objIn, bin_buf);
 				bytesReceived += bin_len;
 				value = bin_buf;
 			}
 			break;
 		case RPC_OBJECT_TYPE_COLLECTION_BOOLEAN:
-			el_len = objIn.readInt();
+			el_len = readInt(objIn);
 			bytesReceived += 4L;
 			if(el_len==-1){
 				value = null;
 			}else{
 				boolean[] bs = new boolean[el_len];
 				for(i=0; i<el_len; i++){
-					int bi1 = objIn.readByte();
+					int bi1 = objIn.read();
 					bytesReceived += 1L;
 					bs[i] = bi1<=0?false:true;
 				}
@@ -220,62 +249,62 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 			}
 			break;
 		case RPC_OBJECT_TYPE_COLLECTION_INT:
-			el_len = objIn.readInt();
+			el_len = readInt(objIn);
 			bytesReceived += 4L;
 			if(el_len==-1){
 				value = null;
 			}else{
 				int[] ints = new int[el_len];
 				for(i=0; i<el_len; i++){					
-					ints[i] = objIn.readInt();
+					ints[i] = readInt(objIn);
 					bytesReceived += 4L;
 				}
 				value = ints;
 			}			
 			break;
 		case RPC_OBJECT_TYPE_COLLECTION_LONG:
-			el_len = objIn.readInt();
+			el_len = readInt(objIn);
 			bytesReceived += 4L;
 			if(el_len==-1){
 				value = null;
 			}else{
 				long[] ain = new long[el_len];
 				for(i=0; i<el_len; i++){					
-					ain[i] = objIn.readLong();
+					ain[i] = readLong(objIn);
 					bytesReceived += 8L;
 				}
 				value = ain;
 			}	
 			break;
 		case RPC_OBJECT_TYPE_COLLECTION_DOUBLE:			
-			el_len = objIn.readInt();
+			el_len = readInt(objIn);
 			bytesReceived += 4L;
 			if(el_len==-1){
 				value = null;
 			}else{
 				double[] ain = new double[el_len];
 				for(i=0; i<el_len; i++){					
-					ain[i] = objIn.readDouble();
+					ain[i] = readDouble(objIn);
 					bytesReceived += 8L;
 				}
 				value = ain;
 			}	
 			break;
 		case RPC_OBJECT_TYPE_COLLECTION_STRING:
-			el_len = objIn.readInt();
+			el_len = readInt(objIn);
 			bytesReceived += 4L;
 			if(el_len==-1){
 				value = null;
 			}else{
 				String[] ain = new String[el_len];
 				for(i=0; i<el_len; i++){					
-					int strlen = objIn.readInt();
+					int strlen = readInt(objIn);
 					bytesReceived += 4L;
 					if(strlen==-1){
 						ain[i] = null;
 					}else{
 						byte[] strbuf = new byte[strlen];
-						objIn.readFully(strbuf);
+						readFully(objIn, strbuf);
 						bytesReceived += strlen;
 						ain[i] = new String(strbuf);						
 					}
@@ -284,23 +313,23 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 			}	
 			break;
 		case RPC_OBJECT_TYPE_MAP_STRING:
-			el_len = objIn.readInt();
+			el_len = readInt(objIn);
 			bytesReceived += 4L;
 			if(el_len==-1){
 				value = null;
 			}else{
 				Map<String, String> map = new HashMap<String, String>();				
 				for(i=0; i<el_len; i++){					
-					int key_len = objIn.readInt();
+					int key_len = readInt(objIn);
 					bytesReceived += 4L;
 					byte[] keybuf = new byte[key_len];
-					objIn.readFully(keybuf);
+					readFully(objIn, keybuf);
 					bytesReceived += key_len;
-					int val_len = objIn.readInt();
+					int val_len = readInt(objIn);
 					bytesReceived += 4L;
 					if(val_len>RPC_OBJECT_VAL_NIL){						
 						byte[] valbuf = new byte[val_len];
-						objIn.readFully(valbuf);
+						readFully(objIn, valbuf);
 						bytesReceived += val_len;
 						map.put(new String(keybuf), new String(valbuf));
 					}
@@ -313,11 +342,11 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 		return obj;
 	}
 	
-	protected  RPCAdminEnvelope decodeAdminEnvelope(ObjectInputStream objIn)  throws IOException
+	protected  RPCAdminEnvelope decodeAdminEnvelope(InputStream objIn)  throws IOException
 	{
 		long bytesReceived = 0L;
 		RPCAdminEnvelope envelope = new RPCAdminEnvelope();
-		int val = objIn.readInt();
+		int val = readInt(objIn);
 		bytesReceived += 4;
 		envelope.setAdminCommand(RPCAdminCommand.valueOf(val));
 		
@@ -333,21 +362,21 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 		return envelope;
 	}
 	
-	protected  RPCJavaEnvelope decodeJavaEnvelope(ObjectInputStream objIn)  throws IOException
+	protected  RPCJavaEnvelope decodeJavaEnvelope(InputStream objIn)  throws IOException
 	{
 		long bytesReceived = 0L;
 		RPCJavaEnvelope envelope = new RPCJavaEnvelope();
 		
 		//decode destination here;
-		int jar_len = objIn.readInt();
+		int jar_len = readInt(objIn);
 		bytesReceived +=4L;
 		if(jar_len!=-1){
 			byte[] jarContent = new byte[jar_len];
-			objIn.readFully(jarContent);
+			readFully(objIn, jarContent);
 			envelope.setJarSource(jarContent);
 			bytesReceived += jar_len;
 		}	
-		int clz_len = objIn.readInt();
+		int clz_len = readInt(objIn);
 		bytesReceived +=4L;
 		String clz_name = readString(objIn, clz_len);
 		bytesReceived += clz_len;
@@ -364,55 +393,75 @@ public class StreamProtocolDecoder implements ProtocolDecoder {
 	}
 	
 	
-	protected  RPCStreamEnvelope decodeStream(ObjectInputStream objIn)  throws IOException
+	protected  RPCStreamEnvelope decodeStream(InputStream objIn)  throws IOException
 	{
 		long bytesReceived = 0L;
 		RPCStreamEnvelope envelope = new RPCStreamEnvelope();
-		short rpcType = objIn.readShort();
+		if(log.isDebugEnabled()) log.debug("Decode Stream");
+		short rpcType =readShort( objIn);
 		envelope.setRpcType(rpcType);
+		if(log.isDebugEnabled()) log.debug("rpcType {}", ((rpcType==RPC_TYPE_REQUEST)?"Request":"Response") );
 		
-		int src_len = objIn.readInt();
+		int src_len = readInt(objIn);
 		bytesReceived +=4L;
 		if(src_len!=-1){
 			envelope.setSource(readString(objIn, src_len));
 			bytesReceived += src_len;
+			if(log.isDebugEnabled()) log.debug("Source {}", envelope.getSource() );
 		}	
 		
 		//decode destination here;
-		int dest_len = objIn.readInt();
+		int dest_len = readInt(objIn);
 		bytesReceived +=4L;
 		if(dest_len!=-1){
 			envelope.setDestination(readString(objIn, dest_len));
 			bytesReceived += dest_len;
+			if(log.isDebugEnabled()) log.debug("getDestination {}", envelope.getDestination());
 		}		
-		long length = objIn.readLong();
+		long length = readLong(objIn);
+		if(log.isDebugEnabled()) log.debug("Stream length [{}]", length);
 		bytesReceived +=8L;
-		if(length>-1){
-			bytesReceived += length;
-			envelope.setLength(length).setStream(new FixedLengthInputStream(objIn, length)).setReceivedInBytes(bytesReceived);
+		if(length>0){			
+			if( envelope.getDestination()!=null){
+				FileOutputStream fout = null;
+				try{
+					fout = new FileOutputStream( envelope.getDestination());
+					bytesReceived += StreamCopier.copy(objIn, 0, length,  fout);
+					fout.flush();
+				}finally{
+					if(fout!=null) fout.close();
+				}
+			}else{
+				bytesReceived += length;
+				objIn.skip(length);
+			}
+			envelope.setLength(length).setReceivedInBytes(bytesReceived);
+			
 		}else{
-			envelope.setLength(-1).setStream(null).setReceivedInBytes(bytesReceived);
+			
+			envelope.setLength(-1).setReceivedInBytes(bytesReceived);
 		}
+		if(log.isDebugEnabled()) log.debug("Stream decode complete, total bytes received [{}]", bytesReceived);
 		return envelope;
 	}
 	
-	protected  RPCMessageEnvelope  decodeMessage(ObjectInputStream objIn)  throws IOException
+	protected  RPCMessageEnvelope  decodeMessage(InputStream objIn)  throws IOException
 	{
 		long bytesReceived = 0L;
 		RPCMessageEnvelope envelope = new RPCMessageEnvelope();
-		int length = objIn.readInt();
+		int length = readInt(objIn);
 		bytesReceived +=4L;
 		byte[] buf = new byte[length];
-		objIn.readFully(buf);
+		readFully(objIn, buf);
 		bytesReceived += length;
 		envelope.setMessage(buf).setReceivedInBytes(bytesReceived);
 		return envelope;
 	}
 	
-	protected String readString(ObjectInputStream objIn, int length) throws IOException
+	protected String readString(InputStream objIn, int length) throws IOException
 	{
 		byte[] buf = new byte[length];
-		objIn.readFully(buf);
+		readFully(objIn, buf);
 		return new String(buf);
 	}
 

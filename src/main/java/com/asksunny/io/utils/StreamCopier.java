@@ -31,45 +31,21 @@ public abstract class StreamCopier {
 		if(offset>0){
 			in.skip(offset);
 		}
-		if(len<=0) len = Long.MAX_VALUE;
-		byte[] buf = new byte[determineBufferSize()];
-		
-		long sent = 0;
-		int rlen = 0;
-		while((rlen=in.read(buf))!=-1 && sent<len){
-			long left = len - sent;
-			if(rlen>left){
-				out.write(buf, 0, (int)left);
-				sent += left;
+		if(len<=0) len = Long.MAX_VALUE;		
+		long sent = 0;		
+		while(sent<len){			
+			int c = in.read();
+			if(c!=-1){
+				out.write(c);
+				sent++;
 			}else{
-				out.write(buf, 0, rlen);
-				sent += rlen;
-			}			
-		}
+				break;
+			}
+		}		
 		out.flush();	
 		return sent;
 	}
 	
-	
-	private static int determineBufferSize()
-	{
-		long freeMem = Runtime.getRuntime().freeMemory();
-		int bufferSize = (int)MEM_SIZE_1K;
-		if(freeMem>MEM_SIZE_10GB){
-			bufferSize = (int)(MEM_SIZE_1MB * 500);
-		}else if(freeMem>MEM_SIZE_5GB){
-			bufferSize = (int)(MEM_SIZE_1MB * 200);
-		}else if(freeMem>MEM_SIZE_1GB){
-			bufferSize = (int)(MEM_SIZE_1MB * 100);
-		}else if(freeMem>MEM_SIZE_30MB){
-			bufferSize = (int)(MEM_SIZE_1MB *10);
-		}else if(freeMem>MEM_SIZE_10MB){
-			bufferSize = (int)(MEM_SIZE_1MB *3);
-		}else{
-			bufferSize = (int)(MEM_SIZE_1MB);
-		}
-		return bufferSize;
-	}
 	
 	
 	private StreamCopier() {

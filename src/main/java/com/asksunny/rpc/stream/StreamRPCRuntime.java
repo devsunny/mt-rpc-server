@@ -5,16 +5,21 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.concurrent.ExecutorService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.asksunny.io.utils.StreamCopier;
 import com.asksunny.protocol.rpc.RPCEnvelope;
 import com.asksunny.protocol.rpc.RPCShellEnvelope;
 import com.asksunny.protocol.rpc.RPCStreamEnvelope;
+import com.asksunny.rpc.javart.JavaRPCRuntime;
 import com.asksunny.rpc.mtserver.RPCRuntime;
 
 public class StreamRPCRuntime implements RPCRuntime {
 
 	ExecutorService executorService;
-
+	final static Logger log = LoggerFactory.getLogger(JavaRPCRuntime.class);
+	
 	public ExecutorService getExecutorService() {
 		return executorService;
 	}
@@ -30,12 +35,11 @@ public class StreamRPCRuntime implements RPCRuntime {
 			File f = new File(request.getSource());
 			if(f.exists() && f.isFile() && f.canRead() )
 			{
+				if(log.isDebugEnabled()) log.debug("Sending file to client.");
 				RPCStreamEnvelope response = new RPCStreamEnvelope();
 				response.setRpcType(RPCEnvelope.RPC_TYPE_RESPONSE);
 				response.setDestination(request.getDestination());
-				response.setSource(request.getSource());
-				response.setLength(f.length());
-				response.setStream(new FileInputStream(f));				
+				response.setSource(request.getSource());						
 				return response;				
 			}else{
 				RPCShellEnvelope response = new RPCShellEnvelope();
@@ -47,7 +51,7 @@ public class StreamRPCRuntime implements RPCRuntime {
 			RPCShellEnvelope response = new RPCShellEnvelope();
 			File f = new File(request.getDestination());
 			if(!f.getParentFile().exists()){
-				boolean mkdir = f.mkdirs();
+				boolean mkdir = f.getParentFile().mkdirs();
 				if(mkdir==false){
 					response.addRpcObjects(1).addRpcObjects("Failed to create directory");					
 				}else{

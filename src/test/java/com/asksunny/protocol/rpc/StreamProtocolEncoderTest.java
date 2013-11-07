@@ -4,10 +4,9 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,21 +27,22 @@ public class StreamProtocolEncoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		
+		InputStream in = (new ByteArrayInputStream(rawdata));
 		assertNotNull(in);
-		short envelopeType = in.readShort();
+		short envelopeType = readShort(in);
 		assertEquals(RPC_ENVELOPE_TYPE_SHELL, envelopeType);
-		long envelopeId = in.readLong();
+		long envelopeId = readLong(in);
 		System.out.println("envelopeid" + envelopeId);
-		short requestType = in.readShort();
+		short requestType = readShort(in);
 		assertEquals(RPC_TYPE_REQUEST, requestType);
-		assertEquals(1, in.readInt());
-		short objectType = in.readShort();
+		assertEquals(1, readInt(in));
+		short objectType = readShort(in);
 		assertEquals(RPC_OBJECT_TYPE_STRING, objectType);
-		int length = in.readInt();
+		int length = readInt(in);
 		assertEquals(3, length);
 		byte[] buf = new byte[length];
-		in.readFully(buf);
+		readFully(in, buf);
 		String cmd = new String(buf);
 		assertEquals("dir", cmd);
 		
@@ -61,22 +61,22 @@ public class StreamProtocolEncoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
-		short envelopeType = in.readShort();
+		short envelopeType = readShort(in);
 		assertEquals(RPC_ENVELOPE_TYPE_SHELL, envelopeType);
-		long envelopeId = in.readLong();
+		long envelopeId = readLong(in);
 		System.out.println("envelopeid" + envelopeId);
-		short requestType = in.readShort();
+		short requestType = readShort(in);
 		assertEquals(RPC_TYPE_REQUEST, requestType);
-		assertEquals(1, in.readInt());
-		short objectType = in.readShort();
+		assertEquals(1, readInt(in));
+		short objectType = readShort(in);
 		assertEquals(RPC_OBJECT_TYPE_COLLECTION_INT, objectType);
-		int length = in.readInt();
+		int length = readInt(in);
 		assertEquals(5, length);		
 		for(int i=0; i<length; i++){
-			assertEquals(i+1,in.readInt());
+			assertEquals(i+1,readInt(in));
 		}				
 	}
 	
@@ -91,21 +91,21 @@ public class StreamProtocolEncoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);		
-		short envelopeType = in.readShort();
+		short envelopeType = readShort(in);
 		assertEquals(RPC_ENVELOPE_TYPE_SHELL, envelopeType);
-		long envelopeId = in.readLong();
+		long envelopeId = readLong(in);
 		System.out.println("envelopeid" + envelopeId);
-		short requestType = in.readShort();
+		short requestType = readShort(in);
 		assertEquals(RPC_TYPE_REQUEST, requestType);
-		assertEquals(1, in.readInt());
-		short objectType = in.readShort();
+		assertEquals(1, readInt(in));
+		short objectType = readShort(in);
 		assertEquals(RPC_OBJECT_TYPE_COLLECTION_INT, objectType);
-		int length = in.readInt();
+		int length = readInt(in);
 		assertEquals(-1, length);		
 		for(int i=0; i<length; i++){
-			assertEquals(i+1,in.readInt());
+			assertEquals(i+1,readInt(in));
 		}
 				
 	}
@@ -129,26 +129,26 @@ public class StreamProtocolEncoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);		
-		short envelopeType = in.readShort();
+		short envelopeType = readShort(in);
 		assertEquals(RPC_ENVELOPE_TYPE_SHELL, envelopeType);
-		long envelopeId = in.readLong();
+		long envelopeId = readLong(in);
 		System.out.println("envelopeid" + envelopeId);
-		short requestType = in.readShort();
+		short requestType = readShort(in);
 		assertEquals(RPC_TYPE_REQUEST, requestType);
-		assertEquals(1, in.readInt());
-		short objectType = in.readShort();
+		assertEquals(1, readInt(in));
+		short objectType = readShort(in);
 		assertEquals(RPC_OBJECT_TYPE_MAP_STRING, objectType);
-		int length = in.readInt();
+		int length = readInt(in);
 		assertEquals(6, length);		
 		for(int i=0; i<length; i++){
-			int klen = in.readInt();
+			int klen = readInt(in);
 			byte[] kbuf = new byte[klen];
-			in.readFully(kbuf);
-			int vlen = in.readInt();
+			readFully(in, kbuf);
+			int vlen = readInt(in);
 			byte[] vbuf = new byte[vlen];
-			in.readFully(vbuf);
+			readFully(in, vbuf);
 			assertTrue(map.containsKey(new String(kbuf)));
 			assertTrue(map.containsValue(new String(vbuf)));
 		}
@@ -165,18 +165,18 @@ public class StreamProtocolEncoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);		
-		short envelopeType = in.readShort();
+		short envelopeType = readShort(in);
 		assertEquals(RPC_ENVELOPE_TYPE_SHELL, envelopeType);
-		long envelopeId = in.readLong();
+		long envelopeId = readLong(in);
 		System.out.println("envelopeid" + envelopeId);
-		short requestType = in.readShort();
+		short requestType = readShort(in);
 		assertEquals(RPC_TYPE_REQUEST, requestType);
-		assertEquals(1, in.readInt());
-		short objectType = in.readShort();
+		assertEquals(1, readInt(in));
+		short objectType = readShort(in);
 		assertEquals(RPC_OBJECT_TYPE_MAP_STRING, objectType);
-		int length = in.readInt();
+		int length = readInt(in);
 		assertEquals(-1, length);
 				
 	}
@@ -192,19 +192,19 @@ public class StreamProtocolEncoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
-		short envelopeType = in.readShort();
+		short envelopeType = readShort(in);
 		assertEquals(RPC_ENVELOPE_TYPE_SHELL, envelopeType);
-		long envelopeId = in.readLong();
+		long envelopeId = readLong(in);
 		System.out.println("envelopeid" + envelopeId);
-		short requestType = in.readShort();
+		short requestType = readShort(in);
 		assertEquals(RPC_TYPE_REQUEST, requestType);
-		assertEquals(1, in.readInt());
-		short objectType = in.readShort();
+		assertEquals(1, readInt(in));
+		short objectType = readShort(in);
 		assertEquals(RPC_OBJECT_TYPE_INT, objectType);
-		int val = in.readInt();
+		int val = readInt(in);
 		assertEquals(1000, val);		
 			
 	}
@@ -219,19 +219,19 @@ public class StreamProtocolEncoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
-		short envelopeType = in.readShort();
+		short envelopeType = readShort(in);
 		assertEquals(RPC_ENVELOPE_TYPE_SHELL, envelopeType);
-		long envelopeId = in.readLong();
+		long envelopeId = readLong(in);
 		System.out.println("envelopeid" + envelopeId);
-		short requestType = in.readShort();
+		short requestType = readShort(in);
 		assertEquals(RPC_TYPE_REQUEST, requestType);
-		assertEquals(1, in.readInt());
-		short objectType = in.readShort();
+		assertEquals(1, readInt(in));
+		short objectType = readShort(in);
 		assertEquals(RPC_OBJECT_TYPE_BOOLEAN, objectType);
-		int val = in.readByte();
+		int val = in.read();
 		assertEquals(1, val);		
 				
 	}
@@ -247,19 +247,19 @@ public class StreamProtocolEncoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
-		short envelopeType = in.readShort();
+		short envelopeType = readShort(in);
 		assertEquals(RPC_ENVELOPE_TYPE_SHELL, envelopeType);
-		long envelopeId = in.readLong();
+		long envelopeId = readLong(in);
 		System.out.println("envelopeid" + envelopeId);
-		short requestType = in.readShort();
+		short requestType = readShort(in);
 		assertEquals(RPC_TYPE_REQUEST, requestType);
-		assertEquals(1, in.readInt());
-		short objectType = in.readShort();
+		assertEquals(1, readInt(in));
+		short objectType = readShort(in);
 		assertEquals(RPC_OBJECT_TYPE_LONG, objectType);
-		long val = in.readLong();
+		long val = readLong(in);
 		assertEquals(10001L, val);		
 		
 	}
@@ -275,19 +275,19 @@ public class StreamProtocolEncoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
 		
-		short envelopeType = in.readShort();
+		short envelopeType = readShort(in);
 		assertEquals(RPC_ENVELOPE_TYPE_SHELL, envelopeType);
-		long envelopeId = in.readLong();
+		long envelopeId = readLong(in);
 		System.out.println("envelopeid" + envelopeId);
-		short requestType = in.readShort();
+		short requestType = readShort(in);
 		assertEquals(RPC_TYPE_REQUEST, requestType);
-		assertEquals(1, in.readInt());
-		short objectType = in.readShort();
+		assertEquals(1, readInt(in));
+		short objectType = readShort(in);
 		assertEquals(RPC_OBJECT_TYPE_DOUBLE, objectType);
-		double val = in.readDouble();
+		double val =readDouble( in);
 		assertEquals(102.25, val, 0.001);		
 			
 	}
@@ -302,15 +302,15 @@ public class StreamProtocolEncoderTest {
 		encoder.encode(out, request);		
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
-		short envelopeType = in.readShort();
+		short envelopeType = readShort(in);
 		assertEquals(RPC_ENVELOPE_TYPE_MESSAGE, envelopeType);		
 		
-		int length = in.readInt();
+		int length = readInt(in);
 		assertEquals("This is my message to server".getBytes().length, length);
 		byte[] buf = new byte[length];
-		in.readFully(buf);
+		readFully(in, buf);
 		String cmd = new String(buf);
 		assertEquals("This is my message to server", cmd);			
 	}
@@ -325,25 +325,19 @@ public class StreamProtocolEncoderTest {
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
 		
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
-		short envelopeType = in.readShort();
+		short envelopeType = readShort(in);
 		assertEquals(RPC_ENVELOPE_TYPE_STREAM, envelopeType);		
-		assertEquals(RPC_TYPE_REQUEST, in.readShort());		
-		int src_len = in.readInt();
+		assertEquals(RPC_TYPE_REQUEST, readShort(in));		
+		int src_len = readInt(in);
 		assertEquals(-1, src_len);	
-		int dest_len = in.readInt();
+		int dest_len = readInt(in);
 		assertEquals(-1, dest_len);		
-		long length = in.readLong();
+		long length = readLong(in);
 		assertEquals("HELLO".getBytes().length, length);
 		in.skip(length);	
-		EOFException d = null;
-		try{
-			in.readInt();
-		}catch(EOFException ex){
-			d = ex;
-		}
-		assertNotNull(d);		
+				
 	}
 	
 	@Test
@@ -363,29 +357,29 @@ public class StreamProtocolEncoderTest {
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
 		
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
-		short envelopeType = in.readShort();
+		short envelopeType = readShort(in);
 		assertEquals(RPC_ENVELOPE_TYPE_JAVA, envelopeType);		
-		int src_len = in.readInt();
+		int src_len = readInt(in);
 		assertEquals(962, src_len);	
 		byte[] rawdata2 = new byte[src_len];
-		in.readFully(rawdata2);		
-		int clzn_len = in.readInt();
+		readFully(in, rawdata2);		
+		int clzn_len = readInt(in);
 		assertEquals("com.asksunny.rpc.rtclient.RPCWorkerJarTest".getBytes().length, clzn_len);		
 		String s = readString(in, clzn_len);
 		assertEquals("com.asksunny.rpc.rtclient.RPCWorkerJarTest", s);	
-		assertEquals(1, in.readInt());
-		assertEquals(RPC_OBJECT_TYPE_STRING, in.readShort());
-		int len = in.readInt();
+		assertEquals(1, readInt(in));
+		assertEquals(RPC_OBJECT_TYPE_STRING, readShort(in));
+		int len = readInt(in);
 		assertEquals("This is parameter to Java prog.".getBytes().length, len);
 		assertEquals("This is parameter to Java prog.", readString(in, len));
 	}
 
-	protected String readString(ObjectInputStream objIn, int length) throws IOException
+	protected String readString(InputStream objIn, int length) throws IOException
 	{
 		byte[] buf = new byte[length];
-		objIn.readFully(buf);
+		readFully(objIn, buf);
 		return new String(buf);
 	}
 	
@@ -400,16 +394,49 @@ public class StreamProtocolEncoderTest {
 		byte[] rawdata = out.toByteArray();
 		assertNotNull(rawdata);
 		
-		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		InputStream in = new ByteArrayInputStream(rawdata);
 		assertNotNull(in);
-		short envelopeType = in.readShort();
+		short envelopeType = readShort(in);
 		assertEquals(RPC_ENVELOPE_TYPE_ADMIN, envelopeType);		
-		int src_len = in.readInt();
+		int src_len = readInt(in);
 		assertEquals(RPCAdminCommand.SHUTDOWN.getValue(), src_len);	
-		int args_len = in.readInt();
+		int args_len = readInt(in);
 		assertEquals(-1, args_len);	
 	}
 
+	protected short readShort(InputStream objIn)  throws IOException
+	{
+		ByteBuffer buf = ByteBuffer.allocate(2);
+		objIn.read(buf.array());
+		return buf.getShort();
+	}
+	protected int readInt(InputStream objIn)  throws IOException
+	{
+		ByteBuffer buf = ByteBuffer.allocate(4);
+		objIn.read(buf.array());
+		return buf.getInt();
+	}
+	
+	protected long readLong(InputStream objIn)  throws IOException
+	{
+		ByteBuffer buf = ByteBuffer.allocate(8);
+		objIn.read(buf.array());
+		return buf.getLong();
+	}
+	
+	protected double readDouble(InputStream objIn)  throws IOException
+	{
+		ByteBuffer buf = ByteBuffer.allocate(8);
+		objIn.read(buf.array());
+		return buf.getDouble();
+	}
+	
+	protected void readFully(InputStream objIn, byte[] b)  throws IOException
+	{
+		for(int i=0; i<b.length; i++){
+			b[i] = (byte)objIn.read();
+		}
+	}
 
 
 }

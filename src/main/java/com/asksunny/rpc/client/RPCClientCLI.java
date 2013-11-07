@@ -60,12 +60,10 @@ public class RPCClientCLI implements ProtocolDecodeHandler {
 		
 		try
 		{
-			bw  = new PrintWriter(".commandHistory");
-			
+			bw  = new PrintWriter(".commandHistory");			
 			String line = null;
 			while((line=commandHistory.poll())!=null){				
-				bw.println(line);
-				System.out.println(line);
+				bw.println(line);				
 			}	
 			bw.flush();
 		}catch (Exception e) {
