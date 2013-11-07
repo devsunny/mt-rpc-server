@@ -148,7 +148,7 @@ public class RPCClientCLI implements ProtocolDecodeHandler {
 			System.exit(1);
 		}
 
-		RPCClient client = new RPCClient(cli.remoteHost, cli.remotePort,  cli.ssl);
+		RPCAsyncClient client = new RPCAsyncClient(cli.remoteHost, cli.remotePort,  cli.ssl);
 		try {
 			client.connect();
 			client.registerHandler(cli);
@@ -208,7 +208,7 @@ public class RPCClientCLI implements ProtocolDecodeHandler {
 	}
 	
 	
-	protected static void handleCommand(RPCClient client, String command) throws Exception
+	protected static void handleCommand(RPCAsyncClient client, String command) throws Exception
 	{
 		CLICommand[] cmds = CLICommandLineParser.parseCommand(command);
 		for (CLICommand remoteCommand : cmds) {

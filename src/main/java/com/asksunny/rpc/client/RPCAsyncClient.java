@@ -20,8 +20,8 @@ import com.asksunny.protocol.rpc.RPCEnvelope;
 import com.asksunny.protocol.rpc.StreamProtocolDecoder;
 import com.asksunny.protocol.rpc.StreamProtocolEncoder;
 
-public class RPCClient implements Runnable {
-	final static Logger log = LoggerFactory.getLogger(RPCClient.class);
+public class RPCAsyncClient implements Runnable {
+	final static Logger log = LoggerFactory.getLogger(RPCAsyncClient.class);
 	String remoteHost;
 	int remotePort;
 	boolean ssl = false;
@@ -132,13 +132,13 @@ public class RPCClient implements Runnable {
 		return client;
 	}
 
-	public RPCClient(String remoteHost, int remotePort) {
+	public RPCAsyncClient(String remoteHost, int remotePort) {
 		super();
 		this.remoteHost = remoteHost;
 		this.remotePort = remotePort;
 	}
 
-	public RPCClient(String remoteHost, int remotePort, boolean ssl) {
+	public RPCAsyncClient(String remoteHost, int remotePort, boolean ssl) {
 		super();
 		this.remoteHost = remoteHost;
 		this.remotePort = remotePort;

@@ -1,11 +1,19 @@
 package com.asksunny.protocol.rpc;
 
-import static com.asksunny.protocol.rpc.RPCEnvelope.*;
-import static org.junit.Assert.*;
+import static com.asksunny.protocol.rpc.RPCEnvelope.RPC_OBJECT_TYPE_BOOLEAN;
+import static com.asksunny.protocol.rpc.RPCEnvelope.RPC_OBJECT_TYPE_COLLECTION_INT;
+import static com.asksunny.protocol.rpc.RPCEnvelope.RPC_OBJECT_TYPE_DOUBLE;
+import static com.asksunny.protocol.rpc.RPCEnvelope.RPC_OBJECT_TYPE_INT;
+import static com.asksunny.protocol.rpc.RPCEnvelope.RPC_OBJECT_TYPE_LONG;
+import static com.asksunny.protocol.rpc.RPCEnvelope.RPC_OBJECT_TYPE_MAP_STRING;
+import static com.asksunny.protocol.rpc.RPCEnvelope.RPC_TYPE_REQUEST;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
