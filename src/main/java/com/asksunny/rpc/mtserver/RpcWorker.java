@@ -36,14 +36,18 @@ public class RpcWorker implements Runnable {
 			StreamProtocolEncoder encoder = new StreamProtocolEncoder();
 			RPCEnvelope envelope = null;
 			while ((envelope=decoder.decodeNow(cin))!=null) {
-				RPCRuntime rt = RPCRuntimeFactory.getDefaultfactory().getRPCRuntime(envelope);				
-				if(log.isDebugEnabled()) log.debug("found the match runtime {}", rt.getClass().getName());
-				RPCEnvelope response = rt.invoke(envelope);
-				if(response!=null){
-					encoder.encode(cout, response);
+				try{
+					RPCRuntime rt = RPCRuntimeFactory.getDefaultfactory().getRPCRuntime(envelope);				
+					if(log.isDebugEnabled()) log.debug("found the match runtime {}", rt.getClass().getName());
+					RPCEnvelope response = rt.invoke(envelope);
+					if(response!=null){
+						encoder.encode(cout, response);
+					}
+				}catch(Throwable ex){
+					log.error(String.format("Failed to execute client %s request %s", this.client.getInetAddress(), envelope.toString()), ex);	
 				}
 			}			
-		}catch(Throwable ex){
+		}catch(IOException ex){
 			log.error(String.format("Failed to handle client %s request", this.client.getInetAddress()), ex);			
 		}finally{
 			ServerStateMonitor.unregisterClient(this.client);

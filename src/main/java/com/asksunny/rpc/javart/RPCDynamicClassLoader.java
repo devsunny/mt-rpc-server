@@ -7,46 +7,56 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLStreamHandlerFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
- * This class is used to dynamically deploy remote jar to runtime in isolated classloader and able to remove jar file afterward.
+ * This class is used to dynamically deploy remote jar to runtime in isolated
+ * classloader and able to remove jar file afterward.
+ * 
  * @author SunnyLiu
- *
+ * 
  */
 public class RPCDynamicClassLoader extends URLClassLoader {
 
+	final static Logger log = LoggerFactory.getLogger(JavaRPCRuntime.class);
+
 	File tmpJarFile = null;
-	
+
 	public RPCDynamicClassLoader(URL[] urls, ClassLoader parent,
 			URLStreamHandlerFactory factory) {
-		super(urls, parent, factory);		
+		super(urls, parent, factory);
 	}
 
 	public RPCDynamicClassLoader(URL[] urls, ClassLoader parent) {
-		super(urls, parent);		
+		super(urls, parent);
 	}
 
 	public RPCDynamicClassLoader(URL[] urls) {
-		super(urls);		
+		super(urls);
 	}
 
-	
-	public static RPCDynamicClassLoader  getClassLoader(byte[] jarContent) throws IOException  {		
+	public static RPCDynamicClassLoader getClassLoader(byte[] jarContent)
+			throws IOException {
 		File tmpFile = null;
-		if(jarContent!=null && jarContent.length>0){
+		if (jarContent != null && jarContent.length > 0) {
 			tmpFile = File.createTempFile("rpc_", ".jar");
 			FileOutputStream fout = new FileOutputStream(tmpFile);
-			try{
+			try {
 				fout.write(jarContent);
 				fout.flush();
-			}finally{
-				if(fout!=null) fout.close();
+			} finally {
+				if (fout != null)
+					fout.close();
 			}
 		}
+
+		if (log.isDebugEnabled() && tmpFile != null)
+			log.debug("Temp Jar file:{}", tmpFile);
 		@SuppressWarnings("resource")
-		RPCDynamicClassLoader loader = (tmpFile!=null)?
-				new RPCDynamicClassLoader(new URL[]{tmpFile.toURI().toURL()}, RPCDynamicClassLoader.class.getClassLoader())
-				: new RPCDynamicClassLoader(new URL[]{}, RPCDynamicClassLoader.class.getClassLoader())
-		;		
+		RPCDynamicClassLoader loader = (tmpFile != null) ? new RPCDynamicClassLoader(
+				new URL[] { tmpFile.toURI().toURL() })
+				: new RPCDynamicClassLoader(new URL[] {});
 		loader.setTmpJarFile(tmpFile);
 		return loader;
 	}
@@ -58,25 +68,28 @@ public class RPCDynamicClassLoader extends URLClassLoader {
 	public void setTmpJarFile(File tmpJarFile) {
 		this.tmpJarFile = tmpJarFile;
 	}
-	
-	
-	
+
 	@Override
-	protected Class<?> findClass(String name) throws ClassNotFoundException {		
-		return super.findClass(name);
+	protected Class<?> findClass(String name) throws ClassNotFoundException {
+		if (log.isDebugEnabled())
+			log.debug("FindClass:{}", name);
+		try {
+			return super.findClass(name);
+		} catch (Exception ex) {
+			return this.getClass().getClassLoader().loadClass(name);
+		}
 	}
 
-	public void close()
-	{
+	public void close() {
 		try {
 			super.close();
 		} catch (IOException e) {
 			;
-		}finally{
-			if(tmpJarFile!=null) tmpJarFile.delete();
+		} finally {
+			if (tmpJarFile != null)
+				tmpJarFile.delete();
 		}
-		
+
 	}
 
-	
 }

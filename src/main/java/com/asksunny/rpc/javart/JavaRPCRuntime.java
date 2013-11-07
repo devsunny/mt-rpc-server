@@ -4,6 +4,9 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.asksunny.io.utils.StrackTraceUtil;
 import com.asksunny.protocol.rpc.JavaMainParamRPCObjectFormatter;
 import com.asksunny.protocol.rpc.RPCEnvelope;
@@ -14,6 +17,8 @@ import com.asksunny.rpc.mtserver.RPCRuntime;
 
 public class JavaRPCRuntime implements RPCRuntime {
 
+	final static Logger log = LoggerFactory.getLogger(JavaRPCRuntime.class);
+	
 	ExecutorService executorService;
 
 	public ExecutorService getExecutorService() {
@@ -27,8 +32,7 @@ public class JavaRPCRuntime implements RPCRuntime {
 	public RPCEnvelope invoke(RPCEnvelope request) throws Exception {
 		
 		RPCJavaEnvelope javEnv = (RPCJavaEnvelope)request;
-		List<RPCObject> params = javEnv.getRpcObjects();
-		
+		List<RPCObject> params = javEnv.getRpcObjects();		
 		RPCShellEnvelope response = new RPCShellEnvelope();
 		response.setRpcType(RPCEnvelope.RPC_TYPE_RESPONSE);
 		
@@ -37,7 +41,9 @@ public class JavaRPCRuntime implements RPCRuntime {
 		try {
 			Class<?> clazz = Class.forName(javEnv.getClassName(), false, cl);
 			Object instance = clazz.newInstance();
+			
 			if (instance instanceof Runnable) {
+				if(log.isDebugEnabled() ) log.debug("Instance of Runnanle");
 				try {
 					if(getExecutorService()!=null){
 						getExecutorService().submit((Runnable)instance);
@@ -51,10 +57,12 @@ public class JavaRPCRuntime implements RPCRuntime {
 					response.addRpcObjects(msg);
 				}
 			} else if (instance instanceof RPCWorkerInterface) {
+				if(log.isDebugEnabled() ) log.debug("Instance of RPCWorkerInterface");
 				RPCWorkerInterface worker = (RPCWorkerInterface) instance;
 				List<RPCObject> result = worker.execute(params);
 				response.setRpcObjects(result);
 			} else if (hasMain(clazz)) {
+				if(log.isDebugEnabled() ) log.debug("Class with Main Method.");
 				try {
 					JavaMainParamRPCObjectFormatter formatter = new JavaMainParamRPCObjectFormatter();					
 					Method m = clazz.getMethod("main", String[].class);

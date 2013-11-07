@@ -66,6 +66,10 @@ public class RPCClient implements Runnable {
 					}
 				} catch (IOException iex) {
 					shutdown();
+					for (ProtocolDecodeHandler handler : registeredHandlers) {
+						handler.onSocketIOError(iex);
+					}
+					
 				} catch (Exception ex) {
 					log.warn("Unexpected err", ex);
 				}

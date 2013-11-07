@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import com.asksunny.cli.utils.CLICommand;
 import com.asksunny.io.utils.StreamCopier;
 
 public class StreamProtocolDecoderTest {
@@ -277,6 +278,7 @@ public class StreamProtocolDecoderTest {
 	
 	@Test
 	public void testDecodeJava() throws IOException{
+		
 		StreamProtocolEncoder encoder = new StreamProtocolEncoder();
 		RPCJavaEnvelope request = (new RPCJavaEnvelope());
 		InputStream jarin = getClass().getResourceAsStream("/test.jar");
@@ -303,6 +305,30 @@ public class StreamProtocolDecoderTest {
 		assertEquals(962, rawdata2.length);	
 		assertEquals("com.asksunny.rpc.rtclient.RPCWorkerJarTest", decoded.getClassName());	
 		assertEquals("This is parameter to Java prog.", decoded.getRpcObjects().get(0).getValue());
+	}
+	
+	
+	@Test
+	public void testDecodeJava2() throws IOException{
+		StreamProtocolEncoder encoder = new StreamProtocolEncoder();
+		String[] args = new String[]{"C:/Users/Sunny Liu/git/mt-rpc-server/src/test/resources/test.jar", "com.asksunny.rpc.rtclient.RPCWorkerJarTest"};
+		CLICommand rcmd = new CLICommand();
+		rcmd.setCmdArray(args);		
+		RPCJavaEnvelope request = RPCJavaEnvelope.createJavaEnvelope(rcmd);
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		encoder.encode(out, request);			
+		byte[] rawdata = out.toByteArray();
+		assertNotNull(rawdata);
+		
+		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rawdata));
+		assertNotNull(in);		
+		StreamProtocolDecoder decoder = new StreamProtocolDecoder();
+		RPCJavaEnvelope decoded = (RPCJavaEnvelope)  decoder.decodeNow(in);		
+		assertNotNull(decoded);			
+		byte[] rawdata2 = ( byte[])decoded.getJarSource();
+		assertEquals(962, rawdata2.length);	
+		assertEquals("com.asksunny.rpc.rtclient.RPCWorkerJarTest", decoded.getClassName());	
+		
 	}
 
 	protected String readString(ObjectInputStream objIn, int length) throws IOException

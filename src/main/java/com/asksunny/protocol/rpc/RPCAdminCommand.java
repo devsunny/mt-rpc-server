@@ -2,7 +2,7 @@ package com.asksunny.protocol.rpc;
 
 public enum RPCAdminCommand {
 
-	PING(1), ECHO(2), UPTIME(3), STATUS(4), SHUTDOWN(9999);
+	PING(1), ECHO(2), UPTIME(3), STATUS(4), HEARTBEAT(5), SHUTDOWN(9999);
 
 	private final int cmd;
 
@@ -24,6 +24,8 @@ public enum RPCAdminCommand {
 			return UPTIME;
 		case 4:
 			return STATUS;
+		case 5:
+			return HEARTBEAT;
 		case 9999:
 			return SHUTDOWN;
 		default:

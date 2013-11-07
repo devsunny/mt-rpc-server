@@ -17,7 +17,7 @@ public class JavaMainParamRPCObjectFormatter implements RPCObjectFormatter {
 	{
 		List<RPCObject> objs = obj.getRpcObjects();
 		String[] args = objs==null?new String[0]:new String[objs.size()];
-		for(int i=0; i<objs.size(); i++){
+		for(int i=0; i< args.length; i++){
 			args[i] =  this.format(objs.get(i));
 		}		
 		return args;

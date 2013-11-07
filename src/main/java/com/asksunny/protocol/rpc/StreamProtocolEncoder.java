@@ -34,20 +34,27 @@ public class StreamProtocolEncoder implements ProtocolEncoder {
 		switch(envelope.getEnvelopeType())
 		{
 		case RPC_ENVELOPE_TYPE_MESSAGE:
+			if(log.isDebugEnabled()) log.debug("encode RPC_ENVELOPE_TYPE_MESSAGE");
 			byteSent += encodeMessage(objOut, (RPCMessageEnvelope) envelope);
 			break;
 		case RPC_ENVELOPE_TYPE_SHELL:
+			if(log.isDebugEnabled()) log.debug("encode RPC_ENVELOPE_TYPE_SHELL");
 			byteSent += encodeShellEnvelope(objOut, (RPCShellEnvelope) envelope);
 			break;		
 		case RPC_ENVELOPE_TYPE_STREAM:
+			if(log.isDebugEnabled()) log.debug("encode RPC_ENVELOPE_TYPE_STREAM");
 			byteSent += encodeStream(objOut, (RPCStreamEnvelope) envelope);
 			break;
-		case RPC_ENVELOPE_TYPE_JAVA:
+		case RPC_ENVELOPE_TYPE_JAVA:	
+			if(log.isDebugEnabled()) log.debug("encode RPC_ENVELOPE_TYPE_JAVA");
 			byteSent += encodeJavaEnvelope(objOut, (RPCJavaEnvelope) envelope);
 			break;
 		case RPC_ENVELOPE_TYPE_ADMIN:
+			if(log.isDebugEnabled()) log.debug("encode RPC_ENVELOPE_TYPE_ADMIN");
 			byteSent += encodeAdminEnvelope(objOut, (RPCAdminEnvelope) envelope);
 			break;	
+		default:
+			log.warn("ignore invalid RPCEnvelope type");
 		}
 		
 		return byteSent;
@@ -68,46 +75,29 @@ public class StreamProtocolEncoder implements ProtocolEncoder {
 	
 	protected long encodeJavaEnvelope(ObjectOutputStream objOut,
 			RPCJavaEnvelope javEnv) throws IOException {
+		if(log.isDebugEnabled()) log.debug("encodeJavaEnvelope");
 		long byteSent = 0L;		
 		objOut.writeShort(javEnv.getEnvelopeType());	
 		byteSent +=2L;
 		Object jarSrc = javEnv.getJarSource();
+		if(log.isDebugEnabled()) log.debug("JarSource:{}", jarSrc);
 		if(jarSrc==null){
+			if(log.isDebugEnabled()) log.debug("JarSource:nil");
 			objOut.writeInt(-1);
 			byteSent +=4L;
 		}else if(jarSrc instanceof byte[]){
+			if(log.isDebugEnabled()) log.debug("JarSource:byte array");
 			byte[] jarContent = (byte[]) jarSrc;			
 			objOut.writeInt(jarContent.length);
 			byteSent +=4L;
 			objOut.write(jarContent);
 			byteSent +=jarContent.length;
-		}else if(jarSrc instanceof String || jarSrc instanceof File){
-			File jarFile = null;
-			if(jarSrc instanceof String){
-				jarFile = new File((String)jarSrc);
-			}else{
-				jarFile = (File)jarSrc;
-			}
-			
-			int length = (int)jarFile.length();
-			objOut.writeInt(length);
-			byteSent +=4L;
-			FileInputStream fin = null;
-			try{
-				fin = new FileInputStream(jarFile);
-				byteSent += StreamCopier.copy(fin, objOut);
-			}finally{
-				if(fin!=null){
-					fin.close();
-				}
-			}
-			
-		}
-			
+		}			
 		byteSent += encodeString(objOut, javEnv.getClassName());		
 		List<RPCObject> rpcObjs = javEnv.getRpcObjects();
 		byteSent += encodeRpcObjects(objOut, rpcObjs);			
 		objOut.flush();
+		if(log.isDebugEnabled()) log.debug("end of encodeJavaEnvelope");
 		return byteSent;
 	}
 	
