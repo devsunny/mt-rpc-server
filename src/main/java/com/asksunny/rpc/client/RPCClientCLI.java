@@ -115,7 +115,7 @@ public class RPCClientCLI implements ProtocolDecodeHandler {
 		Object[] cmds = commandHistory.toArray();		
 		int size = cmds.length;		
 		if(i<=size){	
-			return cmds[i-1].toString();
+			return cmds[size-i].toString();
 		}else{			
 			System.err.println("Invalid index " + i);
 			return null;
@@ -186,6 +186,7 @@ public class RPCClientCLI implements ProtocolDecodeHandler {
 					System.err.println("Invalid command history index " + number);
 				}else{					
 					rpcCommand = getCommand(idx);
+					System.out.println(rpcCommand);
 				}
 			}else{
 				rpcCommand = command;
@@ -222,7 +223,7 @@ public class RPCClientCLI implements ProtocolDecodeHandler {
 				{
 					printHelp(RPCEnvelope.RPC_ENVELOPE_TYPE_JAVA);	
 					
-				}else{
+				}else{					
 					envelope = RPCJavaEnvelope
 							.createJavaEnvelope(remoteCommand);		
 				}

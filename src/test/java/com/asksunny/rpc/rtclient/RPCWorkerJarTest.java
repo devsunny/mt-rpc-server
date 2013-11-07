@@ -12,6 +12,7 @@ public class RPCWorkerJarTest implements RPCWorkerInterface {
 	public List<RPCObject> execute(List<RPCObject> args) throws Exception {
 		
 		List<RPCObject> objs = new ArrayList<RPCObject>();		
+		System.out.println("Argement Size=" +((args==null)? "null":(""+ args.size())));
 		objs.add(RPCObject.newInstance(RPCEnvelope.RPC_OBJECT_TYPE_STRING).setValue("This is returned from server execution2"));
 		if(args!=null && args.size()>0){
 			for(RPCObject obj:args ){
